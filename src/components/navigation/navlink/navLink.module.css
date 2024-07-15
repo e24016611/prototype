@@ -1,0 +1,14 @@
+
+.navLink{
+    margin-top: 20px;
+}
+
+.active {
+    font-weight: bold;
+}
+
+.icon {
+    display: flex;
+    margin-right: 20px;
+}
+

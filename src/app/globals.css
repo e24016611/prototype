@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --text-color: #000000;
+  --component-background-color: #F0F0F0;
+  --table-background-color: #DEDEDE;
+  --background-color: #FFFFFF;
+}
+
+body {
+  color: var(--text-color);
+  background: var(--background-color);
+  font-family: Roboto, Arial, sans-serif;
+  width: 100vw;
+  margin: 0;
+}
+
+.fullscreen {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9999;
+  height: 100vh !important;
+  width: 100vw !important;
+}
+
+.table-container {
+  margin-bottom: 20px;
+}
+
+button:hover {
+  /* background-color: #4ff378; */
+  background-color: #ddd;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Table */
+
+table th,
+table td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  text-align: center;
+  /* width: 150px; */
+  box-sizing: border-box;
+  font-size: x-large;
+}
+
+table {
+  border-collapse: collapse;
+  margin: 25px auto;
+  font-size: 28px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  height: 100%;
+}
+
+/* table thead tr {
+  background-color: #4bbd7f;
+  color: #ffffff;
+  text-align: left;
+} */
+
+table th,
+table td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  text-align: center;
+  width: 150px;
+  box-sizing: border-box;
+  font-size: x-large;
+}
+
+table tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+table tbody tr:nth-of-type(even) {
+  background-color: #f6f6f6;
+}
+
+/* table tbody tr:last-of-type {
+  border-bottom: 2px solid #4bbd7f;
+} */
+
+/* table tbody tr.active-row {
+  font-weight: bold;
+  color: #4bbd7f;
+} */
+
+table tbody tr:hover {
+  background-color: #ddd;
+}
+
+table td:first-child input {
+  width: 50px;
+}
+
+table td:nth-child(2) input {
+  width: 120px;
+}
+
+/* table .edit-cell-container button {
+  border-radius: 50px;
+  height: 26px;
+  width: 26px;
+  border: 1px solid #ccc;
+  color: #ffb918;
+}
+
+table button[name="cancel"] {
+  color: #7b7b7b;
+}
+
+table button[name="done"] {
+  color: #4bbd7f;
+} */
+
+table input,
+select {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+table .edit-cell {
+  display: flex;
+  gap: 5px;
+}
+
+/* table .footer-buttons button {
+  border: none;
+  background-color: transparent;
+}
+
+table .add-button {
+  color: #4bbd7f;
+}
+
+table .edit-cell-action {
+  display: flex;
+  gap: 5px;
+}
+
+table .edit-cell-action button[name="edit"] {
+  color: #ffb918;
+}
+
+table .edit-cell-action button[name="cancel"] {
+  color: #7b7b7b;
+}
+
+table .edit-cell-action button[name="done"] {
+  color: #4bbd7f;
+}
+
+table .edit-cell-action button[name="remove"] {
+  color: red;
+  background-color: rgb(230, 208, 208);
+} */
