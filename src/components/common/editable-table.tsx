@@ -34,7 +34,7 @@ const CollapseCell: (context: CellContext<any, any>) => React.ReactNode = ({
   const meta = table.options.meta as any;
   const toggleCollapse = (e: MouseEvent<HTMLButtonElement>) => {
     setOpen(!open);
-    meta?.setCollapseRows((old) => {
+    meta?.setCollapseRows((old: any) => {
       return { ...old, [row.id]: !old[row.id] };
     }, console.log(`collapseRows = ${JSON.stringify(meta?.collapseRows)}`));
   };
@@ -112,7 +112,7 @@ const EditCell: (context: CellContext<any, any>) => React.ReactNode = ({
 }) => {
   const meta = table.options.meta as any;
   const setEditedRows = (e: MouseEvent<HTMLButtonElement>) => {
-    meta?.setEditedRows((old: []) => ({
+    meta?.setEditedRows((old: any) => ({
       ...old,
       [row.id]: !old[row.id],
     }));
@@ -145,7 +145,7 @@ const EditCell: (context: CellContext<any, any>) => React.ReactNode = ({
 };
 interface EditableTableProps {
   data: any[];
-  setData: (data: any[] | ((prev) => any)) => void;
+  setData: (data: any[] | ((prev: any) => any)) => void;
   isEditable: boolean;
   toDisplay?: (ori: string) => string;
   ignoredHeader?: Set<string>;
@@ -183,7 +183,7 @@ export default function EditableTable(props: EditableTableProps) {
     ? props.ignoredHeader
     : new Set<string>(['id']);
   let displayOrder: string[] | undefined = props.displayOrder;
-  let displayFilter: (row) => boolean = props.displayFilter
+  let displayFilter: (row: any) => boolean = props.displayFilter
     ? props.displayFilter
     : () => true;
   let removeRowFunc: (rowIndex: number) => (old: any[]) => any[] =
@@ -244,7 +244,7 @@ export default function EditableTable(props: EditableTableProps) {
     meta: {
       updateData: (rowIndex: number, columnId: string, value: string) => {
         setData((old) =>
-          old.map((row, index) => {
+          old.map((row: any, index: number) => {
             if (index === rowIndex) {
               let data: string | number = value;
               if (typeof old[rowIndex][columnId] == 'number') {
