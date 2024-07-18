@@ -6,14 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.2.6",
-    "next": "14.2.5",
-    "react": "^18",
-    "react-dom": "^18",
-    "react-redux": "^9.1.2",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@mui/icons-material": "^5.15.21",
@@ -21,20 +17,31 @@
     "@mui/x-charts": "^7.8.0",
     "@mui/x-date-pickers": "^7.7.1",
     "@prisma/client": "^5.15.0",
+    "@reduxjs/toolkit": "^2.2.6",
     "@tanstack/react-table": "^8.16.0",
     "dateformat": "^5.0.3",
     "dayjs": "^1.11.11",
+    "js-sdsl": "^4.4.2",
+    "next": "14.2.5",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-redux": "^9.1.2",
     "sqlite": "^5.1.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.6",
+    "@testing-library/react": "^16.0.0",
+    "@types/jest": "^29.5.12",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8",
+    "prisma": "^5.15.0",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5",
-    "prisma": "^5.15.0"
+    "typescript": "^5"
   }
 }
