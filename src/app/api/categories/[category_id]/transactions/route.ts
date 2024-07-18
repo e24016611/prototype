@@ -3,6 +3,22 @@ import prisma from '@/utils/db';
 import { TransactionDetail } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const TRANSACTION_SELECT = {
+  TransactionDetail: {
+    select: {
+      itemId: true,
+      quantity: true,
+      unitPrice: true,
+    },
+  },
+  id: true,
+  buyer: true,
+  seller: true,
+  amount: true,
+  isAccounted: true,
+  isShipped: true,
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { category_id: string } }
@@ -36,21 +52,7 @@ export async function GET(
       ...typeQuery,
     },
 
-    select: {
-      TransactionDetail: {
-        select: {
-          itemId: true,
-          quantity: true,
-          unitPrice: true,
-        },
-      },
-      id: true,
-      buyer: true,
-      seller: true,
-      amount: true,
-      isAccounted: true,
-      isShipped: true,
-    },
+    select: TRANSACTION_SELECT,
   });
 
   return NextResponse.json(result, { status: 200 });
@@ -80,6 +82,7 @@ export async function PUT(
     };
     result = await prisma.transaction.create({
       data: data,
+      select: TRANSACTION_SELECT,
     });
   } catch (error) {
     console.error(error);

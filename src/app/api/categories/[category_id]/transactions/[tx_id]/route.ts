@@ -1,6 +1,7 @@
 import prisma from '@/utils/db';
 import { Transaction, TransactionDetail } from '@/utils/type';
 import { NextRequest, NextResponse } from 'next/server';
+import { TRANSACTION_SELECT } from '../route';
 
 export async function POST(
   request: NextRequest,
@@ -33,11 +34,12 @@ export async function POST(
         },
       },
     };
-    const updateTx = await prisma.transaction.update({
+    result = await prisma.transaction.update({
       where: {
         id: body.id,
       },
       data: data,
+      select: TRANSACTION_SELECT,
     });
 
     // result = await prisma.$transaction([deleteDetail, updateTx]);
