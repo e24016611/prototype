@@ -14,6 +14,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import {
   CellContext,
+  Row,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -75,7 +76,7 @@ const DataCell: (context: CellContext<any, any>) => React.ReactNode = ({
   }, [isEditMode, value]);
 
   const onBlur = () => {
-    meta?.updateData(row.index, column.id, value);
+    meta?.updateData(row.id, row.index, column.id, value);
   };
 
   if (typeof value === 'boolean') {
@@ -118,7 +119,7 @@ const EditCell: (context: CellContext<any, any>) => React.ReactNode = ({
     }));
   };
   const removeRow = () => {
-    meta?.removeRow(row.index);
+    meta?.removeRow(row.id, row.index);
   };
   return (
     meta.isRowEditable(row) && (
@@ -149,55 +150,41 @@ interface EditableTableProps {
   isEditable: boolean;
   toDisplay?: (ori: string) => string;
   ignoredHeader?: Set<string>;
-  displayOrder?: string[];
+  columnOrder?: string[];
   displayFilter?: (row: any) => boolean;
-  removeRowFunc?: (rowIndex: number) => (old: any[]) => any[];
-  newRow?: () => any;
-  setIsUserInput?: (isUserInput: boolean) => void;
+  addNewRow?: () => void;
+  updateData?: (
+    rowId: string,
+    rowIndex: number,
+    columnId: string,
+    value: string
+  ) => void;
+  removeRow?: (rowId: string, rowIndex: number) => void;
   cellReplace?: (value: string) => string;
   isRowEditable?: (row: any) => boolean;
   isCollapsible?: boolean;
+  getRowId?: (originalRow: any, index: number, parent?: Row<any>) => string;
 }
-
-const history = [
-  {
-    date: '2020-01-05',
-    customerId: '11091700',
-    amount: 3,
-  },
-  {
-    date: '2020-01-02',
-    customerId: 'Anonymous',
-    amount: 1,
-  },
-];
 
 export default function EditableTable(props: EditableTableProps) {
   let data = props.data;
   let setData = props.setData;
   let isEditable = props.isEditable;
-  let toDisplay: (ori: string) => string = props.toDisplay
-    ? props.toDisplay
-    : (ori) => ori;
-  let ignoredHeader: Set<string> = props.ignoredHeader
+  let toDisplay = props.toDisplay ? props.toDisplay : (ori: string) => ori;
+  let ignoredHeader = props.ignoredHeader
     ? props.ignoredHeader
     : new Set<string>(['id']);
-  let displayOrder: string[] | undefined = props.displayOrder;
-  let displayFilter: (row: any) => boolean = props.displayFilter
-    ? props.displayFilter
-    : () => true;
-  let removeRowFunc: (rowIndex: number) => (old: any[]) => any[] =
-    props.removeRowFunc
-      ? props.removeRowFunc
-      : (rowIndex: number) => (old: any[]) =>
-          old.filter((_row, index: number) => index !== rowIndex);
-  let newRow: (() => any) | undefined = props.newRow;
-  let setIsUserInput = props.setIsUserInput;
-  let cellReplace: (value: string) => string =
-    props.cellReplace ?? ((value: string) => value);
-  let isRowEditable: (row: any) => boolean =
-    props.isRowEditable ?? ((row) => true);
+  let columnOrder = props.columnOrder;
+  let displayFilter = props.displayFilter ? props.displayFilter : () => true;
+  let removeRow = props.removeRow;
+  let updateData = props.updateData;
+  let addNewRow = props.addNewRow;
+  let cellReplace = props.cellReplace ?? ((value: string) => value);
+  let isRowEditable = props.isRowEditable ?? ((row) => true);
   let isCollapsible = props.isCollapsible ?? false;
+  let getRowId =
+    props.getRowId ??
+    ((originalRow: any, index: number, parent?: Row<any>) => index.toString());
 
   const columns: any[] = [];
   const columnHelper = createColumnHelper<any>();
@@ -231,7 +218,7 @@ export default function EditableTable(props: EditableTableProps) {
       })
     );
 
-    displayOrder?.unshift(COLLAPSE);
+    columnOrder?.unshift(COLLAPSE);
   }
 
   const table = useReactTable({
@@ -239,38 +226,43 @@ export default function EditableTable(props: EditableTableProps) {
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: {
-      columnOrder: displayOrder,
+      columnOrder: columnOrder,
     },
     meta: {
-      updateData: (rowIndex: number, columnId: string, value: string) => {
-        setData((old) =>
-          old.map((row: any, index: number) => {
-            if (index === rowIndex) {
-              let data: string | number = value;
-              if (typeof old[rowIndex][columnId] == 'number') {
-                if (!isNaN(+value)) data = Number.parseInt(value);
-                else data = old[rowIndex][columnId];
+      updateData: (
+        rowId: string,
+        rowIndex: number,
+        columnId: string,
+        value: string
+      ) => {
+        if (updateData) {
+          updateData(rowId, rowIndex, columnId, value);
+        } else {
+          setData((old) =>
+            old.map((row: any, index: number) => {
+              if (index === rowIndex) {
+                let data: string | number = value;
+                if (typeof old[rowIndex][columnId] == 'number') {
+                  if (!isNaN(+value)) data = Number.parseInt(value);
+                  else data = old[rowIndex][columnId];
+                }
+                return {
+                  ...old[rowIndex],
+                  [columnId]: data,
+                };
               }
-              return {
-                ...old[rowIndex],
-                [columnId]: data,
-              };
-            }
-            return row;
-          })
-        );
-        if (setIsUserInput) {
-          setIsUserInput(true);
+              return row;
+            })
+          );
         }
       },
       editedRows,
       setEditedRows,
       addRow: () => {
-        let temp: any;
-        if (newRow) {
-          temp = newRow();
+        if (addNewRow) {
+          addNewRow();
         } else {
-          temp = {};
+          let temp: any = {};
           for (const key in data[0]) {
             if (Object.prototype.hasOwnProperty.call(data[0], key)) {
               const element = data[0][key];
@@ -281,18 +273,18 @@ export default function EditableTable(props: EditableTableProps) {
               }
             }
           }
-        }
-        const setFunc = (old: any[]) => [...old, temp];
-        setData(setFunc);
-        if (setIsUserInput) {
-          setIsUserInput(true);
+
+          const setFunc = (old: any[]) => [...old, temp];
+          setData(setFunc);
         }
       },
-      removeRow: (rowIndex: number) => {
-        const setFilterFunc = removeRowFunc(rowIndex);
-        setData(setFilterFunc);
-        if (setIsUserInput) {
-          setIsUserInput(true);
+      removeRow: (rowId: string, rowIndex: number) => {
+        if (removeRow) {
+          removeRow(rowId, rowIndex);
+        } else {
+          const setFilterFunc = (old: any[]) =>
+            old.filter((_row, index: number) => index !== rowIndex);
+          setData(setFilterFunc);
         }
       },
       cellReplace: cellReplace,
@@ -300,6 +292,7 @@ export default function EditableTable(props: EditableTableProps) {
       collapseRows: collapseRows,
       setCollapseRows: setCollapseRows,
     },
+    getRowId: getRowId,
   });
 
   return (
@@ -348,13 +341,7 @@ export default function EditableTable(props: EditableTableProps) {
                           in={(table.options.meta as any)?.collapseRows[row.id]}
                           timeout="auto"
                           unmountOnExit
-                        >
-                          <EditableTable
-                            data={history}
-                            setData={(data) => data}
-                            isEditable={true}
-                          ></EditableTable>
-                        </Collapse>
+                        ></Collapse>
                       </TableCell>
                     </TableRow>
                   )}

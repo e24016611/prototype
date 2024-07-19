@@ -48,7 +48,7 @@ export const fetchTransactions = createAsyncThunk<
 
 export const createTransaction = createAsyncThunk<
   Transaction,
-  { category: string; transactionDate: Dayjs; transaction: Transaction }
+  { category: string; transaction: Transaction }
 >(
   'transactions/createTransaction',
   async ({ transaction, category }, { rejectWithValue }) => {
@@ -124,9 +124,9 @@ export const transactionSlice = createSlice({
       })
       .addCase(updateTransaction.fulfilled, (state, action) => {
         const incoming = action.payload;
-        state.transactions = state.transactions.map((tx) =>
-          tx.id == incoming.id ? incoming : tx
-        );
+        state.transactions = state.transactions
+          .map((tx) => (tx.id == incoming.id ? incoming : tx))
+          .filter((tx) => !tx.deleted);
       });
   },
 });

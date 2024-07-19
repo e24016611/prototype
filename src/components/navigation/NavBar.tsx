@@ -40,7 +40,7 @@ export default function NavBar() {
   }, [timer, hideNavbar]);
 
   const handleMouseMove = useCallback(
-    (e) => {
+    (e: MouseEvent) => {
       if (e.clientX <= 20) {
         // 當滑鼠在距離左邊 20px 以內時
         showNavbar();

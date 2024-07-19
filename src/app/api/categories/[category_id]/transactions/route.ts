@@ -17,6 +17,7 @@ export const TRANSACTION_SELECT = {
   amount: true,
   isAccounted: true,
   isShipped: true,
+  deleted: true,
 };
 
 export async function GET(
