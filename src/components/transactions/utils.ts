@@ -141,6 +141,7 @@ export function useNewTransaction(
   transactionDate: Dayjs | null
 ) {
   const dispatch = useTxDispatch();
+  const emptyTransactionDetail = useEmptyTransactionDetail(items);
   return useCallback(() => {
     if (!transactionDate) return;
     let transaction: Transaction = {
@@ -148,17 +149,19 @@ export function useNewTransaction(
       transactionDate: transactionDate.toDate(),
       TransactionDetail: [],
     };
-    for (const item of items) {
-      transaction.TransactionDetail.push({
-        itemId: item.id,
-        quantity: 0,
-        unitPrice: 0,
-      });
-    }
+
+    transaction.TransactionDetail = emptyTransactionDetail();
+
     dispatch(
       createTransaction({ category: category, transaction: transaction })
     );
-  }, [items, emptyTransaction, transactionDate, category, dispatch]);
+  }, [
+    emptyTransactionDetail,
+    emptyTransaction,
+    transactionDate,
+    category,
+    dispatch,
+  ]);
 }
 
 export function useUpdateTransactionData(
@@ -224,7 +227,13 @@ export function useRemoveTransaction(
   );
 }
 
-export function useEmptyTransactionDetail() {}
+export function useEmptyTransactionDetail(items: Item[]) {
+  return useCallback((): TransactionDetail[] => {
+    return items.map<TransactionDetail>((item) => {
+      return { itemId: item.id, quantity: 0, unitPrice: 0 };
+    });
+  }, [items]);
+}
 
 function isKeyOf<T extends object>(
   key: string | number | symbol,

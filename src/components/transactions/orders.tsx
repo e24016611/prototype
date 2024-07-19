@@ -3,11 +3,13 @@ import { Transaction, TransactionKeys } from '@/utils/type';
 import { Box } from '@mui/material';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
+import { createTransaction, useTxDispatch } from './store';
 import { TransactionsContext } from './transaction';
 import {
   EMPTY_TRANSACTION,
   useColumnOrder,
   useDisplayData,
+  useEmptyTransactionDetail,
   useGetRowId,
   useItemMap,
   useNewTransaction,
@@ -33,6 +35,7 @@ export default function Orders() {
   const { isLoading, items, transactions, category, date } =
     useContext(TransactionsContext);
   const itemMap = useItemMap(items);
+  const dispatch = useTxDispatch();
   const filter = useCallback(
     (tx: Transaction) => !tx.deleted && tx.seller === SELF,
     []
@@ -43,6 +46,31 @@ export default function Orders() {
     return id1 - id2;
   }, []);
   const [orders, setOrders] = useState<Transaction[]>([]);
+  const emptyTransactionDetail = useEmptyTransactionDetail(items);
+  useEffect(() => {
+    if (isLoading || !date) return;
+    if (transactions.some((tx) => tx.buyer == LOSS && tx.seller == SELF))
+      return;
+    dispatch(
+      createTransaction({
+        category: category.id.toString(),
+        transaction: {
+          ...EMPTY_ORDER,
+          buyer: LOSS,
+          TransactionDetail: emptyTransactionDetail(),
+          transactionDate: date.toDate(),
+        },
+      })
+    );
+  }, [
+    category,
+    date,
+    isLoading,
+    transactions,
+    dispatch,
+    emptyTransactionDetail,
+  ]);
+
   useEffect(() => {
     if (isLoading) return;
     const newStock = transactions.filter(filter).sort(compare);
@@ -64,7 +92,7 @@ export default function Orders() {
     date
   );
 
-  const updateTransaction = useUpdateTransactionData(
+  const updateTransactionData = useUpdateTransactionData(
     itemMap,
     transactions,
     category.id.toString()
@@ -90,7 +118,7 @@ export default function Orders() {
           columnOrder={columnOrder}
           getRowId={getRowId}
           addNewRow={newTransaction}
-          updateData={updateTransaction}
+          updateData={updateTransactionData}
           removeRow={removeTransaction}
         ></EditableTable>
       )}
