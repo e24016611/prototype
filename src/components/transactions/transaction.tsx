@@ -1,10 +1,8 @@
 import { Item, Transaction } from '@/utils/type';
 import { Dayjs } from 'dayjs';
 import { createContext, useEffect, useState } from 'react';
-import { Provider, TypedUseSelectorHook } from 'react-redux';
+import { Provider } from 'react-redux';
 import {
-  AppDispatch,
-  RootState,
   fetchTransactions,
   store,
   useTxDispatch,
@@ -16,8 +14,7 @@ export type TransactionsContextType = {
   date: Dayjs | null;
   transactions: Transaction[];
   items: Item[];
-  useTxDispatch: () => AppDispatch;
-  useTxSelector: TypedUseSelectorHook<RootState>;
+  isLoading: boolean
 };
 
 export const TransactionsContext = createContext<TransactionsContextType>({
@@ -25,8 +22,7 @@ export const TransactionsContext = createContext<TransactionsContextType>({
   date: null,
   transactions: [],
   items: [],
-  useTxDispatch: useTxDispatch,
-  useTxSelector: useTxSelector,
+  isLoading: true
 });
 
 export default function Transactions({
@@ -83,6 +79,7 @@ function TransactionContext({
   }, [category, date, dispatch]);
 
   const transactions = useTxSelector((state) => state.transaction.transactions);
+  const isLoading = useTxSelector((state) => state.transaction.isLoading);
 
   return (
     <TransactionsContext.Provider
@@ -91,8 +88,7 @@ function TransactionContext({
         date: date,
         transactions: transactions,
         items: items,
-        useTxDispatch: useTxDispatch,
-        useTxSelector: useTxSelector,
+        isLoading: isLoading
       }}
     >
       {children}

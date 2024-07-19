@@ -2,6 +2,7 @@ import {
   DISPLAY_UNIT_PRICE_POSTFIX,
   NEW_ORDER_ID,
   SELF,
+  STOCK,
   UNIT_PRICE_POSTFIX,
 } from '@/utils/constants';
 import {
@@ -15,9 +16,13 @@ import { Row } from '@tanstack/react-table';
 import { Dayjs } from 'dayjs';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
-import { createTransaction, updateTransaction, useTxDispatch } from './store';
+import {
+  createTransaction,
+  updateTransaction,
+  useTxDispatch,
+  useTxSelector,
+} from './store';
 import { TransactionsContext } from './transaction';
-import { createAsyncThunk } from '@reduxjs/toolkit';
 
 const DISPLAY_HEADER = new Map<TransactionKeys, string>([
   ['seller', '貨源'],
@@ -256,8 +261,9 @@ function useStockCompare() {
 }
 
 export default function Stock() {
-  const { items, transactions, category, date } =
+  const { isLoading, items, transactions, category, date } =
     useContext(TransactionsContext);
+  const dispatch = useTxDispatch();
   const itemMap = useItemMap(items);
   const filter = useCallback(
     (tx: Transaction) => !tx.deleted && tx.buyer === SELF,
@@ -265,13 +271,40 @@ export default function Stock() {
   );
   const compare = useStockCompare();
   const [stock, setStock] = useState<Transaction[]>([]);
+  const persistingStock = useTxSelector(
+    (state) => state.transaction.persistingStock
+  );
   useEffect(() => {
-    setStock(transactions.filter(filter).sort(compare));
-  }, [transactions, filter, compare]);
+    if (isLoading) return;
+    const newStock = transactions.filter(filter).sort(compare);
+    setStock(newStock);
+  }, [isLoading, transactions, filter, compare]);
+
+  //   useEffect(() => {
+  //     if (isLoading || !date) return;
+  //     if (
+  //       !persistingStock[date.format(DATE_PATTERN)] &&
+  //       !transactions.some((tx) => tx.buyer == SELF && tx.seller == STOCK)
+  //     ) {
+  //       dispatch(
+  //         createStockTransaction({
+  //           category: category,
+  //           transactionDate: date,
+  //           defaultStock: DEFAULT_STOCK,
+  //         })
+  //       );
+  //     } else {
+  //       const stockTransaction = transactions.find(
+  //         (tx) => tx.buyer == SELF && tx.seller == STOCK
+  //       );
+  //       if (!stockTransaction) return;
+  //     }
+  //   }, [persistingStock, isLoading, category, date, transactions, dispatch]);
+
   const [displayData, setDisplayData] = useDisplayData(stock, items);
   const toDisplay = useToDisplay(itemMap, DISPLAY_HEADER);
   const cellReplace = (value: string) => {
-    if (value == 'stock') return '昨日庫存';
+    if (value == STOCK) return '昨日庫存';
     else return value;
   };
   const columnOrder = useColumnOrder(items);
@@ -293,19 +326,23 @@ export default function Stock() {
 
   return (
     <Box>
-      <EditableTable
-        data={displayData}
-        setData={setDisplayData}
-        isEditable={true}
-        toDisplay={toDisplay}
-        ignoredHeader={IGNORED_HEADER}
-        cellReplace={cellReplace}
-        columnOrder={columnOrder}
-        getRowId={getRowId}
-        addNewRow={newTransaction}
-        updateData={updateTransaction}
-        removeRow={removeTransaction}
-      ></EditableTable>
+      {isLoading ? (
+        <p>loading...</p>
+      ) : (
+        <EditableTable
+          data={displayData}
+          setData={setDisplayData}
+          isEditable={true}
+          toDisplay={toDisplay}
+          ignoredHeader={IGNORED_HEADER}
+          cellReplace={cellReplace}
+          columnOrder={columnOrder}
+          getRowId={getRowId}
+          addNewRow={newTransaction}
+          updateData={updateTransaction}
+          removeRow={removeTransaction}
+        ></EditableTable>
+      )}
     </Box>
   );
 }

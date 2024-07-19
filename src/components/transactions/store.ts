@@ -1,3 +1,4 @@
+import { STOCK } from '@/utils/constants';
 import { DATE_PATTERN } from '@/utils/date';
 import { Transaction } from '@/utils/type';
 import {
@@ -5,7 +6,7 @@ import {
   createAsyncThunk,
   createSlice,
 } from '@reduxjs/toolkit';
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 
 const HEADERS = {
@@ -16,12 +17,14 @@ const HEADERS = {
 type TransactionState = {
   transactions: Transaction[];
   isLoading: boolean;
+  persistingStock: { [k: string]: boolean };
   error: string[];
 };
 
 const initialState: TransactionState = {
   transactions: [],
   isLoading: true,
+  persistingStock: {},
   error: [],
 };
 
@@ -95,6 +98,79 @@ export const updateTransaction = createAsyncThunk<
   }
 );
 
+export const createStockTransaction = createAsyncThunk<
+  void,
+  { category: string; transactionDate: Dayjs; defaultStock: Transaction }
+>(
+  'transactions/createStockTransaction',
+  async (
+    { category, transactionDate, defaultStock },
+    { rejectWithValue, dispatch }
+  ) => {
+    try {
+      const stock: Transaction = {
+        ...defaultStock,
+        seller: STOCK,
+        transactionDate: transactionDate.toDate(),
+        TransactionDetail: [],
+      };
+      const queryDateStr = transactionDate.format(DATE_PATTERN);
+      const statistics: { itemId: number; quantity: number }[] = await (
+        await fetch(
+          `api/statistics/stock?date=${queryDateStr}&category=${category}`
+        )
+      ).json();
+      if (statistics.length > 0) {
+        for (const data of statistics) {
+          stock.TransactionDetail.push({
+            itemId: +data.itemId,
+            quantity: +data.quantity,
+            unitPrice: 0,
+          });
+        }
+        dispatch(createTransaction({ category: category, transaction: stock }));
+      }
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const updateStockTransaction = createAsyncThunk<
+  void,
+  { category: string; transactionDate: Dayjs; currentStock: Transaction }
+>(
+  'transactions/updateStockTransaction',
+  async ({ category, currentStock }, { rejectWithValue, dispatch }) => {
+    try {
+      const stock: Transaction = {
+        ...currentStock,
+        TransactionDetail: [],
+      };
+      const queryDateStr = dayjs(currentStock.transactionDate).format(
+        DATE_PATTERN
+      );
+      const statistics: { itemId: number; quantity: number }[] = await (
+        await fetch(
+          `api/statistics/stock?date=${queryDateStr}&category=${category}`
+        )
+      ).json();
+      if (statistics.length > 0) {
+        for (const data of statistics) {
+          stock.TransactionDetail.push({
+            itemId: +data.itemId,
+            quantity: +data.quantity,
+            unitPrice: 0,
+          });
+        }
+        dispatch(updateTransaction({ category: category, transaction: stock }));
+      }
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
 export const transactionSlice = createSlice({
   name: 'transactions',
   initialState: initialState,
@@ -116,8 +192,12 @@ export const transactionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchTransactions.pending, (state, action) => {
+        state.isLoading = true;
+      })
       .addCase(fetchTransactions.fulfilled, (state, action) => {
         state.transactions = action.payload;
+        state.isLoading = false;
       })
       .addCase(createTransaction.fulfilled, (state, action) => {
         state.transactions.push(action.payload);
@@ -127,6 +207,11 @@ export const transactionSlice = createSlice({
         state.transactions = state.transactions
           .map((tx) => (tx.id == incoming.id ? incoming : tx))
           .filter((tx) => !tx.deleted);
+      })
+      .addCase(createStockTransaction.pending, (state, action) => {
+        state.persistingStock[
+          action.meta.arg.transactionDate.format(DATE_PATTERN)
+        ] = true;
       });
   },
 });
