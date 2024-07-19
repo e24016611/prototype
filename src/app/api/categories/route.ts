@@ -6,6 +6,11 @@ export async function GET() {
     where: {
       deleted: false,
     },
+    select: {
+      id: true,
+      name: true,
+      isAgent: true,
+    },
   });
   return Response.json(result);
 }

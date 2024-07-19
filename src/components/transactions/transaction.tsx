@@ -1,4 +1,4 @@
-import { Item, Transaction } from '@/utils/type';
+import { Category, Item, Transaction } from '@/utils/type';
 import { Dayjs } from 'dayjs';
 import { createContext, useEffect, useState } from 'react';
 import { Provider } from 'react-redux';
@@ -10,19 +10,19 @@ import {
 } from './store';
 
 export type TransactionsContextType = {
-  category: string;
+  category: Category;
   date: Dayjs | null;
   transactions: Transaction[];
   items: Item[];
-  isLoading: boolean
+  isLoading: boolean;
 };
 
 export const TransactionsContext = createContext<TransactionsContextType>({
-  category: '',
+  category: { id: -1, name: '', isAgent: false },
   date: null,
   transactions: [],
   items: [],
-  isLoading: true
+  isLoading: true,
 });
 
 export default function Transactions({
@@ -31,7 +31,7 @@ export default function Transactions({
   date: date,
 }: Readonly<{
   children: React.ReactNode;
-  category: string;
+  category: Category;
   date: Dayjs | null;
 }>) {
   return (
@@ -53,7 +53,7 @@ function TransactionContext({
   date: date,
 }: Readonly<{
   children: React.ReactNode;
-  category: string;
+  category: Category;
   date: Dayjs | null;
 }>) {
   const [items, setItems] = useState<Item[]>([]);
@@ -70,12 +70,17 @@ function TransactionContext({
 
   useEffect(() => {
     if (!category) return;
-    fetchItems(category);
+    fetchItems(category.id.toString());
   }, [category]);
 
   useEffect(() => {
     if (!date || !category) return;
-    dispatch(fetchTransactions({ category, transactionDate: date }));
+    dispatch(
+      fetchTransactions({
+        category: category.id.toString(),
+        transactionDate: date,
+      })
+    );
   }, [category, date, dispatch]);
 
   const transactions = useTxSelector((state) => state.transaction.transactions);
@@ -88,7 +93,7 @@ function TransactionContext({
         date: date,
         transactions: transactions,
         items: items,
-        isLoading: isLoading
+        isLoading: isLoading,
       }}
     >
       {children}
