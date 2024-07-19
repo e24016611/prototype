@@ -5,7 +5,7 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
 import { TransactionsContext } from './transaction';
 import {
-  DEFAULT_TRANSACTION,
+  EMPTY_TRANSACTION,
   useColumnOrder,
   useDisplayData,
   useGetRowId,
@@ -24,8 +24,8 @@ const DISPLAY_HEADER = new Map<TransactionKeys, string>([
 ]);
 
 const IGNORED_HEADER = new Set<TransactionKeys>(['id', 'buyer', 'deleted']);
-const DEFAULT_STOCK: Transaction = {
-  ...DEFAULT_TRANSACTION,
+const EMPTY_STOCK: Transaction = {
+  ...EMPTY_TRANSACTION,
   buyer: SELF,
 };
 
@@ -86,7 +86,7 @@ export default function Stock() {
   const getRowId = useGetRowId();
   const newTransaction = useNewTransaction(
     items,
-    DEFAULT_STOCK,
+    EMPTY_STOCK,
     category.id.toString(),
     date
   );

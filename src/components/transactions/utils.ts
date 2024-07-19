@@ -14,7 +14,7 @@ import { Dayjs } from 'dayjs';
 import { useCallback, useEffect, useState } from 'react';
 import { createTransaction, updateTransaction, useTxDispatch } from './store';
 
-export const DEFAULT_TRANSACTION: Transaction = {
+export const EMPTY_TRANSACTION: Transaction = {
   id: NEW_ORDER_ID,
   buyer: '',
   seller: '',
@@ -136,29 +136,29 @@ export function useGetRowId() {
 
 export function useNewTransaction(
   items: Item[],
-  defaultTransaction: Transaction,
+  emptyTransaction: Transaction,
   category: string,
   transactionDate: Dayjs | null
 ) {
   const dispatch = useTxDispatch();
   return useCallback(() => {
     if (!transactionDate) return;
-    let emptyTransaction: Transaction = {
-      ...defaultTransaction,
+    let transaction: Transaction = {
+      ...emptyTransaction,
       transactionDate: transactionDate.toDate(),
       TransactionDetail: [],
     };
     for (const item of items) {
-      emptyTransaction.TransactionDetail.push({
+      transaction.TransactionDetail.push({
         itemId: item.id,
         quantity: 0,
         unitPrice: 0,
       });
     }
     dispatch(
-      createTransaction({ category: category, transaction: emptyTransaction })
+      createTransaction({ category: category, transaction: transaction })
     );
-  }, [items, defaultTransaction, transactionDate, category, dispatch]);
+  }, [items, emptyTransaction, transactionDate, category, dispatch]);
 }
 
 export function useUpdateTransactionData(
@@ -173,7 +173,7 @@ export function useUpdateTransactionData(
       const immutableTransaction = transactions.find((tx) => tx.id === +rowId);
       if (!immutableTransaction) return;
       const transaction = { ...immutableTransaction };
-      if (isKeyOf(columnId, DEFAULT_TRANSACTION)) {
+      if (isKeyOf(columnId, EMPTY_TRANSACTION)) {
         if (typeof transaction[columnId] == 'number' && isNaN(+value)) return;
         (transaction as any)[columnId] = value;
         dispatch(
@@ -223,6 +223,8 @@ export function useRemoveTransaction(
     [transactions, category, dispatch]
   );
 }
+
+export function useEmptyTransactionDetail() {}
 
 function isKeyOf<T extends object>(
   key: string | number | symbol,
