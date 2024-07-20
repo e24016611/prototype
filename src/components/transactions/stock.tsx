@@ -1,6 +1,7 @@
 import { SELF, STOCK } from '@/utils/constants';
 import { Transaction, TransactionKeys } from '@/utils/type';
 import { Box } from '@mui/material';
+import { Row } from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
@@ -54,6 +55,10 @@ export default function Stock() {
   }, []);
   const [stock, setStock] = useState<Transaction[]>([]);
   const [isInit, setIsInit] = useState<Boolean>(false);
+  const isRowEditable = useCallback(
+    (row: Row<any>) => row.getValue('seller') != 'stock',
+    []
+  );
 
   useEffect(() => {
     if (isLoading) return;
@@ -138,6 +143,7 @@ export default function Stock() {
           addNewRow={newTransaction}
           updateData={updateTransaction}
           removeRow={removeTransaction}
+          isRowEditable={isRowEditable}
         ></EditableTable>
       )}
     </Box>

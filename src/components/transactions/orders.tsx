@@ -3,6 +3,7 @@ import { Transaction, TransactionKeys } from '@/utils/type';
 import { Box } from '@mui/material';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
+import RealtimeStock from './realtime-stock';
 import { createTransaction, useTxDispatch } from './store';
 import { TransactionsContext } from './transaction';
 import {
@@ -114,19 +115,22 @@ export default function Orders() {
       {isLoading ? (
         <p>loading...</p>
       ) : (
-        <EditableTable
-          data={displayData}
-          setData={setDisplayData}
-          isEditable={true}
-          toDisplay={toDisplay}
-          ignoredHeader={IGNORED_HEADER}
-          cellReplace={cellReplace}
-          columnOrder={columnOrder}
-          getRowId={getRowId}
-          addNewRow={newTransaction}
-          updateData={updateTransactionData}
-          removeRow={removeTransaction}
-        ></EditableTable>
+        <Box>
+          <RealtimeStock transactions={transactions}></RealtimeStock>
+          <EditableTable
+            data={displayData}
+            setData={setDisplayData}
+            isEditable={true}
+            toDisplay={toDisplay}
+            ignoredHeader={IGNORED_HEADER}
+            cellReplace={cellReplace}
+            columnOrder={columnOrder}
+            getRowId={getRowId}
+            addNewRow={newTransaction}
+            updateData={updateTransactionData}
+            removeRow={removeTransaction}
+          ></EditableTable>
+        </Box>
       )}
     </Box>
   );
