@@ -1,8 +1,14 @@
 import { SELF, STOCK } from '@/utils/constants';
 import { Transaction, TransactionKeys } from '@/utils/type';
 import { Box } from '@mui/material';
+import dayjs from 'dayjs';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
+import {
+  createStockTransaction,
+  updateStockTransaction,
+  useTxDispatch,
+} from './store';
 import { TransactionsContext } from './transaction';
 import {
   EMPTY_TRANSACTION,
@@ -32,10 +38,8 @@ const EMPTY_STOCK: Transaction = {
 export default function Stock() {
   const { isLoading, items, transactions, category, date } =
     useContext(TransactionsContext);
-  //     const dispatch = useTxDispatch();
-  //   const persistingStock = useTxSelector(
-  //     (state) => state.transaction.persistingStock
-  //   );
+  const dispatch = useTxDispatch();
+
   const itemMap = useItemMap(items);
   const filter = useCallback(
     (tx: Transaction) => !tx.deleted && tx.buyer === SELF,
@@ -49,32 +53,47 @@ export default function Stock() {
     return id1 - id2;
   }, []);
   const [stock, setStock] = useState<Transaction[]>([]);
+  const [isInit, setIsInit] = useState<Boolean>(false);
+
   useEffect(() => {
     if (isLoading) return;
     const newStock = transactions.filter(filter).sort(compare);
     setStock(newStock);
   }, [isLoading, transactions, filter, compare]);
 
-  //   useEffect(() => {
-  //     if (isLoading || !date) return;
-  //     if (
-  //       !persistingStock[date.format(DATE_PATTERN)] &&
-  //       !transactions.some((tx) => tx.buyer == SELF && tx.seller == STOCK)
-  //     ) {
-  //       dispatch(
-  //         createStockTransaction({
-  //           category: category,
-  //           transactionDate: date,
-  //           defaultStock: DEFAULT_STOCK,
-  //         })
-  //       );
-  //     } else {
-  //       const stockTransaction = transactions.find(
-  //         (tx) => tx.buyer == SELF && tx.seller == STOCK
-  //       );
-  //       if (!stockTransaction) return;
-  //     }
-  //   }, [persistingStock, isLoading, category, date, transactions, dispatch]);
+  useEffect(() => {
+    if (isLoading) return;
+    setIsInit(false);
+  }, [date, category, isLoading]);
+
+  useEffect(() => {
+    if (isInit || isLoading || !date) return;
+    if (!transactions.some((tx) => tx.buyer == SELF && tx.seller == STOCK)) {
+      dispatch(
+        createStockTransaction({
+          category: category.id.toString(),
+          transactionDate: date,
+          defaultStock: EMPTY_STOCK,
+        })
+      );
+    } else {
+      const stockTransaction = transactions.find(
+        (tx) => tx.buyer == SELF && tx.seller == STOCK
+      );
+      if (
+        !stockTransaction ||
+        !dayjs(stockTransaction.transactionDate!).isSame(date)
+      )
+        return;
+      dispatch(
+        updateStockTransaction({
+          category: category.id.toString(),
+          currentStock: stockTransaction,
+        })
+      );
+    }
+    setIsInit(true);
+  }, [isLoading, category, date, transactions, dispatch, isInit]);
 
   const [displayData, setDisplayData] = useDisplayData(stock, items);
   const toDisplay = useToDisplay(itemMap, DISPLAY_HEADER);

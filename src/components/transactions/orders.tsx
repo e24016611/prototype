@@ -47,8 +47,12 @@ export default function Orders() {
   }, []);
   const [orders, setOrders] = useState<Transaction[]>([]);
   const emptyTransactionDetail = useEmptyTransactionDetail(items);
+  const [isInit, setIsInit] = useState<Boolean>(false);
   useEffect(() => {
-    if (isLoading || !date) return;
+    setIsInit(false);
+  }, [category, date]);
+  useEffect(() => {
+    if (isInit || isLoading || !date) return;
     if (transactions.some((tx) => tx.buyer == LOSS && tx.seller == SELF))
       return;
     dispatch(
@@ -62,6 +66,7 @@ export default function Orders() {
         },
       })
     );
+    setIsInit(true);
   }, [
     category,
     date,
@@ -69,6 +74,7 @@ export default function Orders() {
     transactions,
     dispatch,
     emptyTransactionDetail,
+    isInit,
   ]);
 
   useEffect(() => {

@@ -16,6 +16,7 @@ const HEADERS = {
 
 type TransactionState = {
   transactions: Transaction[];
+  transactionDate: Dayjs;
   isLoading: boolean;
   persistingStock: { [k: string]: boolean };
   error: string[];
@@ -23,6 +24,7 @@ type TransactionState = {
 
 const initialState: TransactionState = {
   transactions: [],
+  transactionDate: dayjs(0),
   isLoading: true,
   persistingStock: {},
   error: [],
@@ -138,7 +140,7 @@ export const createStockTransaction = createAsyncThunk<
 
 export const updateStockTransaction = createAsyncThunk<
   void,
-  { category: string; transactionDate: Dayjs; currentStock: Transaction }
+  { category: string; currentStock: Transaction }
 >(
   'transactions/updateStockTransaction',
   async ({ category, currentStock }, { rejectWithValue, dispatch }) => {
@@ -156,6 +158,7 @@ export const updateStockTransaction = createAsyncThunk<
         )
       ).json();
       if (statistics.length > 0) {
+        stock.TransactionDetail = [];
         for (const data of statistics) {
           stock.TransactionDetail.push({
             itemId: +data.itemId,
@@ -198,6 +201,7 @@ export const transactionSlice = createSlice({
       .addCase(fetchTransactions.fulfilled, (state, action) => {
         state.transactions = action.payload;
         state.isLoading = false;
+        state.transactionDate = action.meta.arg.transactionDate;
       })
       .addCase(createTransaction.fulfilled, (state, action) => {
         state.transactions.push(action.payload);
