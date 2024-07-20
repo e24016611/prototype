@@ -9,10 +9,18 @@ export type Category = Pick<CategoryPrisma, 'id' | 'name' | 'isAgent'>;
 
 export type Transaction = Pick<
   TransactionPrisma,
-  'id' | 'buyer' | 'seller' | 'amount' | 'isAccounted' | 'isShipped' | 'deleted'
+  | 'id'
+  | 'buyer'
+  | 'seller'
+  | 'amount'
+  | 'isAccounted'
+  | 'isShipped'
+  | 'deleted'
+  | 'parentTransactionId'
 > & {
   TransactionDetail: TransactionDetail[];
   transactionDate: Date | undefined;
+  childTransactions: Transaction[];
 };
 export type TransactionDetail = Pick<
   TransactionDetailPrisma,

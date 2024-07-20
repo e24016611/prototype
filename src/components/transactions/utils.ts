@@ -24,6 +24,8 @@ export const EMPTY_TRANSACTION: Transaction = {
   deleted: false,
   transactionDate: undefined,
   TransactionDetail: [],
+  parentTransactionId: null,
+  childTransactions: [],
 };
 
 export function useItemMap(items: Item[]): Map<string, Item> {

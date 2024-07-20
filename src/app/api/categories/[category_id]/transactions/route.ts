@@ -18,6 +18,7 @@ export const TRANSACTION_SELECT = {
   isAccounted: true,
   isShipped: true,
   deleted: true,
+  parentTransactionId: true,
 };
 
 export async function GET(
