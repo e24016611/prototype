@@ -26,11 +26,16 @@ import {
 const DISPLAY_HEADER = new Map<TransactionKeys, string>([
   ['seller', '貨源'],
   ['amount', '金額'],
-  ['isShipped', '出貨'],
-  ['isAccounted', '入帳'],
+  ['isShipped', '進貨'],
+  ['isAccounted', '付款'],
 ]);
 
-const IGNORED_HEADER = new Set<TransactionKeys>(['id', 'buyer', 'deleted']);
+const IGNORED_HEADER = new Set<TransactionKeys>([
+  'id',
+  'buyer',
+  'deleted',
+  'childTransactions',
+]);
 const EMPTY_STOCK: Transaction = {
   ...EMPTY_TRANSACTION,
   buyer: SELF,
@@ -56,7 +61,7 @@ export default function Stock() {
   const [stock, setStock] = useState<Transaction[]>([]);
   const [isInit, setIsInit] = useState<Boolean>(false);
   const isRowEditable = useCallback(
-    (row: Row<any>) => row.getValue('seller') != 'stock',
+    (row: Row<any>) => row.getValue('seller') != STOCK,
     []
   );
 

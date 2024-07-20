@@ -28,4 +28,4 @@ export type TransactionDetail = Pick<
 >;
 
 export type Item = Pick<ItemPrisma, 'id' | 'name'>;
-export type TransactionKeys = keyof TransactionPrisma;
+export type TransactionKeys = keyof Transaction;

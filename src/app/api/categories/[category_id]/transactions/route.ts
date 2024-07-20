@@ -1,9 +1,9 @@
 import { getTodayStr } from '@/utils/date';
 import prisma from '@/utils/db';
-import { TransactionDetail } from '@prisma/client';
+import { Prisma, TransactionDetail } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 
-export const TRANSACTION_SELECT = {
+export const TRANSACTION_SELECT: Prisma.TransactionSelect = {
   TransactionDetail: {
     select: {
       itemId: true,
@@ -19,6 +19,24 @@ export const TRANSACTION_SELECT = {
   isShipped: true,
   deleted: true,
   parentTransactionId: true,
+  childTransactions: {
+    select: {
+      TransactionDetail: {
+        select: {
+          itemId: true,
+          quantity: true,
+          unitPrice: true,
+        },
+      },
+      id: true,
+      buyer: true,
+      seller: true,
+      amount: true,
+      isAccounted: true,
+      isShipped: true,
+      deleted: true,
+    },
+  },
 };
 
 export async function GET(

@@ -80,8 +80,8 @@ export default function Orders() {
 
   useEffect(() => {
     if (isLoading) return;
-    const newStock = transactions.filter(filter).sort(compare);
-    setOrders(newStock);
+    const newOrders = transactions.filter(filter).sort(compare);
+    setOrders(newOrders);
   }, [isLoading, transactions, filter, compare]);
 
   const [displayData, setDisplayData] = useDisplayData(orders, items);
