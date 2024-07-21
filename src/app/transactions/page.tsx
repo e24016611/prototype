@@ -58,12 +58,14 @@ export default function Page() {
             <DatePicker value={date} onChange={(date) => setDate(date)} />
           </LocalizationProvider>
         </Box>
-        <div className={styles.top}>
+        <div className={category.isAgent ? styles.full : styles.top}>
           <Stock></Stock>
         </div>
-        <div className={styles.bottom}>
-          <Orders></Orders>
-        </div>
+        {!category.isAgent && (
+          <div className={styles.bottom}>
+            <Orders></Orders>
+          </div>
+        )}
       </Transactions>
     </Box>
   ) : (

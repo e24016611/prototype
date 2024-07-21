@@ -5,6 +5,7 @@ import { Row } from '@tanstack/react-table';
 import dayjs from 'dayjs';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
+import { OrderMain } from './orders';
 import {
   createStockTransaction,
   updateStockTransaction,
@@ -105,8 +106,9 @@ export default function Stock() {
     setIsInit(true);
   }, [isLoading, category, date, transactions, dispatch, isInit]);
 
-  const [displayData, setDisplayData] = useDisplayData(stock, items);
+  const [displayData] = useDisplayData(stock, items);
   const toDisplay = useToDisplay(itemMap, DISPLAY_HEADER);
+
   const cellReplace = (value: string) => {
     if (value == STOCK) return '昨日庫存';
     else return value;
@@ -131,6 +133,36 @@ export default function Stock() {
     category.id.toString()
   );
 
+  const collapseTable = useCallback(
+    (rowId: string) => {
+      const txId = Number.parseInt(rowId);
+      const parentTransaction = transactions.find((tx) => tx.id == txId);
+      if (!parentTransaction) return '';
+      const childTransactions = parentTransaction.childTransactions;
+      const newChildTransaction = (data?: Partial<Transaction>) => {
+        newTransaction({
+          parentTransactionId: txId,
+          seller: SELF,
+          buyer: '',
+          ...data,
+        });
+      };
+      return (
+        date && (
+          <OrderMain
+            transactions={[...childTransactions, parentTransaction]}
+            isLoading={false}
+            category={category}
+            date={date}
+            items={items}
+            newTransaction={newChildTransaction}
+          ></OrderMain>
+        )
+      );
+    },
+    [transactions, items, category, date, newTransaction]
+  );
+
   return (
     <Box>
       {isLoading ? (
@@ -138,7 +170,6 @@ export default function Stock() {
       ) : (
         <EditableTable
           data={displayData}
-          setData={setDisplayData}
           isEditable={true}
           toDisplay={toDisplay}
           ignoredHeader={IGNORED_HEADER}
@@ -149,6 +180,8 @@ export default function Stock() {
           updateData={updateTransaction}
           removeRow={removeTransaction}
           isRowEditable={isRowEditable}
+          isCollapsible={category.isAgent}
+          collapseTable={collapseTable}
         ></EditableTable>
       )}
     </Box>

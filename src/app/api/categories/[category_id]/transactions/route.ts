@@ -94,6 +94,7 @@ export async function PUT(
       categoryId: Number.parseInt(params.category_id),
       amount: body.amount,
       transactionDate: body.transactionDate,
+      parentTransactionId: body.parentTransactionId,
       TransactionDetail: {
         createMany: {
           data: details,

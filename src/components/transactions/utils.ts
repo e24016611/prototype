@@ -144,26 +144,30 @@ export function useNewTransaction(
 ) {
   const dispatch = useTxDispatch();
   const emptyTransactionDetail = useEmptyTransactionDetail(items);
-  return useCallback(() => {
-    if (!transactionDate) return;
-    let transaction: Transaction = {
-      ...emptyTransaction,
-      transactionDate: transactionDate.toDate(),
-      TransactionDetail: [],
-    };
+  return useCallback(
+    (data?: Partial<Transaction>) => {
+      if (!transactionDate) return;
+      let transaction: Transaction = {
+        ...emptyTransaction,
+        transactionDate: transactionDate.toDate(),
+        TransactionDetail: [],
+        ...data,
+      };
 
-    transaction.TransactionDetail = emptyTransactionDetail();
+      transaction.TransactionDetail = emptyTransactionDetail();
 
-    dispatch(
-      createTransaction({ category: category, transaction: transaction })
-    );
-  }, [
-    emptyTransactionDetail,
-    emptyTransaction,
-    transactionDate,
-    category,
-    dispatch,
-  ]);
+      dispatch(
+        createTransaction({ category: category, transaction: transaction })
+      );
+    },
+    [
+      emptyTransactionDetail,
+      emptyTransaction,
+      transactionDate,
+      category,
+      dispatch,
+    ]
+  );
 }
 
 export function useUpdateTransactionData(

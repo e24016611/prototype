@@ -1,10 +1,10 @@
 import { LOSS, SELF } from '@/utils/constants';
-import { Transaction, TransactionKeys } from '@/utils/type';
+import { Category, Item, Transaction, TransactionKeys } from '@/utils/type';
 import { Box } from '@mui/material';
+import { Dayjs } from 'dayjs';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
 import RealtimeStock from './realtime-stock';
-import { createTransaction, useTxDispatch } from './store';
 import { TransactionsContext } from './transaction';
 import {
   EMPTY_TRANSACTION,
@@ -32,11 +32,19 @@ const EMPTY_ORDER: Transaction = {
   seller: SELF,
 };
 
-export default function Orders() {
-  const { isLoading, items, transactions, category, date } =
-    useContext(TransactionsContext);
+export type OrderMainProps = {
+  isLoading: boolean;
+  items: Item[];
+  transactions: Transaction[];
+  category: Category;
+  date: Dayjs;
+  newTransaction: (data?: Partial<Transaction> | undefined) => void;
+};
+
+export function OrderMain(props: OrderMainProps) {
+  const { isLoading, items, transactions, category, date, newTransaction } =
+    props;
   const itemMap = useItemMap(items);
-  const dispatch = useTxDispatch();
   const filter = useCallback(
     (tx: Transaction) => !tx.deleted && tx.seller === SELF,
     []
@@ -53,27 +61,19 @@ export default function Orders() {
     setIsInit(false);
   }, [category, date]);
   useEffect(() => {
-    if (isInit || isLoading || !date) return;
+    if (isInit || isLoading) return;
     if (transactions.some((tx) => tx.buyer == LOSS && tx.seller == SELF))
       return;
-    dispatch(
-      createTransaction({
-        category: category.id.toString(),
-        transaction: {
-          ...EMPTY_ORDER,
-          buyer: LOSS,
-          TransactionDetail: emptyTransactionDetail(),
-          transactionDate: date.toDate(),
-        },
-      })
-    );
+    newTransaction({
+      buyer: LOSS,
+    });
     setIsInit(true);
   }, [
     category,
     date,
     isLoading,
     transactions,
-    dispatch,
+    newTransaction,
     emptyTransactionDetail,
     isInit,
   ]);
@@ -92,12 +92,6 @@ export default function Orders() {
   };
   const columnOrder = useColumnOrder(items);
   const getRowId = useGetRowId();
-  const newTransaction = useNewTransaction(
-    items,
-    EMPTY_ORDER,
-    category.id.toString(),
-    date
-  );
 
   const updateTransactionData = useUpdateTransactionData(
     itemMap,
@@ -119,7 +113,6 @@ export default function Orders() {
           <RealtimeStock transactions={transactions}></RealtimeStock>
           <EditableTable
             data={displayData}
-            setData={setDisplayData}
             isEditable={true}
             toDisplay={toDisplay}
             ignoredHeader={IGNORED_HEADER}
@@ -133,5 +126,28 @@ export default function Orders() {
         </Box>
       )}
     </Box>
+  );
+}
+
+export default function Orders() {
+  const { isLoading, items, transactions, category, date } =
+    useContext(TransactionsContext);
+  const newTransaction = useNewTransaction(
+    items,
+    EMPTY_ORDER,
+    category.id.toString(),
+    date
+  );
+  return date ? (
+    <OrderMain
+      isLoading={isLoading}
+      items={items}
+      transactions={transactions}
+      category={category}
+      date={date}
+      newTransaction={newTransaction}
+    ></OrderMain>
+  ) : (
+    <p>loading... </p>
   );
 }

@@ -20,7 +20,13 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import React, { MouseEvent, useEffect, useRef, useState } from 'react';
+import React, {
+  MouseEvent,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { FooterCell } from './editable-table-footer';
 import './table.module.css';
 
@@ -146,7 +152,6 @@ const EditCell: (context: CellContext<any, any>) => React.ReactNode = ({
 };
 interface EditableTableProps {
   data: any[];
-  setData: (data: any[] | ((prev: any) => any)) => void;
   isEditable: boolean;
   toDisplay?: (ori: string) => string;
   ignoredHeader?: Set<string>;
@@ -163,12 +168,12 @@ interface EditableTableProps {
   cellReplace?: (value: string) => string;
   isRowEditable?: (row: any) => boolean;
   isCollapsible?: boolean;
+  collapseTable?: (rowId: string) => ReactNode;
   getRowId?: (originalRow: any, index: number, parent?: Row<any>) => string;
 }
 
 export default function EditableTable(props: EditableTableProps) {
   let data = props.data;
-  let setData = props.setData;
   let isEditable = props.isEditable;
   let toDisplay = props.toDisplay ? props.toDisplay : (ori: string) => ori;
   let ignoredHeader = props.ignoredHeader
@@ -235,57 +240,15 @@ export default function EditableTable(props: EditableTableProps) {
         columnId: string,
         value: string
       ) => {
-        if (updateData) {
-          updateData(rowId, rowIndex, columnId, value);
-        } else {
-          setData((old) =>
-            old.map((row: any, index: number) => {
-              if (index === rowIndex) {
-                let data: string | number = value;
-                if (typeof old[rowIndex][columnId] == 'number') {
-                  if (!isNaN(+value)) data = Number.parseInt(value);
-                  else data = old[rowIndex][columnId];
-                }
-                return {
-                  ...old[rowIndex],
-                  [columnId]: data,
-                };
-              }
-              return row;
-            })
-          );
-        }
+        if (updateData) updateData(rowId, rowIndex, columnId, value);
       },
       editedRows,
       setEditedRows,
       addRow: () => {
-        if (addNewRow) {
-          addNewRow();
-        } else {
-          let temp: any = {};
-          for (const key in data[0]) {
-            if (Object.prototype.hasOwnProperty.call(data[0], key)) {
-              const element = data[0][key];
-              if (typeof element === 'string') {
-                temp[key] = ' ';
-              } else if (typeof element === 'number') {
-                temp[key] = 0;
-              }
-            }
-          }
-
-          const setFunc = (old: any[]) => [...old, temp];
-          setData(setFunc);
-        }
+        if (addNewRow) addNewRow();
       },
       removeRow: (rowId: string, rowIndex: number) => {
-        if (removeRow) {
-          removeRow(rowId, rowIndex);
-        } else {
-          const setFilterFunc = (old: any[]) =>
-            old.filter((_row, index: number) => index !== rowIndex);
-          setData(setFilterFunc);
-        }
+        if (removeRow) removeRow(rowId, rowIndex);
       },
       cellReplace: cellReplace,
       isRowEditable: isRowEditable,
@@ -297,7 +260,7 @@ export default function EditableTable(props: EditableTableProps) {
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <TableContainer sx={{ maxHeight: '40vh' }}>
+      <TableContainer>
         <Table stickyHeader>
           <TableHead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -341,7 +304,11 @@ export default function EditableTable(props: EditableTableProps) {
                           in={(table.options.meta as any)?.collapseRows[row.id]}
                           timeout="auto"
                           unmountOnExit
-                        ></Collapse>
+                        >
+                          {props.collapseTable
+                            ? props.collapseTable(row.id)
+                            : ''}
+                        </Collapse>
                       </TableCell>
                     </TableRow>
                   )}

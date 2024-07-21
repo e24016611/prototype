@@ -17,14 +17,12 @@ const HEADERS = {
 type TransactionState = {
   transactions: Transaction[];
   isLoading: boolean;
-  persistingStock: { [k: string]: boolean };
   error: string[];
 };
 
 const initialState: TransactionState = {
   transactions: [],
   isLoading: true,
-  persistingStock: {},
   error: [],
 };
 
@@ -202,17 +200,25 @@ export const transactionSlice = createSlice({
       })
       .addCase(createTransaction.fulfilled, (state, action) => {
         state.transactions.push(action.payload);
+        const parentId = action.payload.parentTransactionId;
+        if (parentId) {
+          state.transactions.forEach((tx) => {
+            if (tx.id == parentId) tx.childTransactions.push(action.payload);
+          });
+        }
       })
       .addCase(updateTransaction.fulfilled, (state, action) => {
         const incoming = action.payload;
         state.transactions = state.transactions
-          .map((tx) => (tx.id == incoming.id ? incoming : tx))
-          .filter((tx) => !tx.deleted);
-      })
-      .addCase(createStockTransaction.pending, (state, action) => {
-        state.persistingStock[
-          action.meta.arg.transactionDate.format(DATE_PATTERN)
-        ] = true;
+          .filter((tx) => !tx.deleted)
+          .map((tx) => (tx.id == incoming.id ? incoming : tx));
+        const parentId = incoming.parentTransactionId;
+        if (!parentId) return;
+        const parent = state.transactions.find((tx) => tx.id == parentId);
+        if (!parent) return;
+        parent.childTransactions = parent.childTransactions.map((tx) =>
+          tx.id == incoming.id ? incoming : tx
+        );
       });
   },
 });
