@@ -1,4 +1,4 @@
-import { LOSS, SELF } from '@/utils/constants';
+import { COMMISSION, LOSS, SELF, TRANSPORT, WORKER } from '@/utils/constants';
 import { Category, Item, Transaction, TransactionKeys } from '@/utils/type';
 import { Box } from '@mui/material';
 import { Dayjs } from 'dayjs';
@@ -10,7 +10,6 @@ import {
   EMPTY_TRANSACTION,
   useColumnOrder,
   useDisplayData,
-  useEmptyTransactionDetail,
   useGetRowId,
   useItemMap,
   useNewTransaction,
@@ -18,6 +17,8 @@ import {
   useToDisplay,
   useUpdateTransactionData,
 } from './utils';
+
+const AGENT_INIT_LIST = [WORKER, TRANSPORT, COMMISSION];
 
 const DISPLAY_HEADER = new Map<TransactionKeys, string>([
   ['buyer', '客戶'],
@@ -32,13 +33,27 @@ const EMPTY_ORDER: Transaction = {
   seller: SELF,
 };
 
+const ROW_ORDERS: { [key: string]: number } = {
+  LOSS: 4,
+  WORKER: 3,
+  TRANSPORT: 2,
+  COMMISSION: 1,
+};
+
+function hasBuyer(transactions: Transaction[], buyer: string) {
+  return transactions.some((tx) => tx.buyer == LOSS && tx.seller == SELF);
+}
+
 export type OrderMainProps = {
   isLoading: boolean;
   items: Item[];
   transactions: Transaction[];
   category: Category;
   date: Dayjs;
-  newTransaction: (data?: Partial<Transaction> | undefined) => void;
+  newTransaction: (props?: {
+    data?: Partial<Transaction>;
+    getKey?: () => string;
+  }) => void;
 };
 
 export function OrderMain(props: OrderMainProps) {
@@ -50,33 +65,43 @@ export function OrderMain(props: OrderMainProps) {
     []
   );
   const compare = useCallback((row1: Transaction, row2: Transaction) => {
-    const id1: number = row1.buyer === LOSS ? Number.MAX_SAFE_INTEGER : row1.id;
-    const id2: number = row2.buyer === LOSS ? Number.MAX_SAFE_INTEGER : row2.id;
+    const id1: number = ROW_ORDERS[row1.buyer]
+      ? Number.MAX_SAFE_INTEGER - ROW_ORDERS[row1.buyer]
+      : row1.id;
+    const id2: number = ROW_ORDERS[row2.buyer]
+      ? Number.MAX_SAFE_INTEGER - ROW_ORDERS[row1.buyer]
+      : row2.id;
     return id1 - id2;
   }, []);
   const [orders, setOrders] = useState<Transaction[]>([]);
-  const emptyTransactionDetail = useEmptyTransactionDetail(items);
   const [isInit, setIsInit] = useState<Boolean>(false);
   useEffect(() => {
     setIsInit(false);
   }, [category, date]);
   useEffect(() => {
     if (isInit || isLoading) return;
-    if (transactions.some((tx) => tx.buyer == LOSS && tx.seller == SELF))
-      return;
-    newTransaction({
-      buyer: LOSS,
-    });
+    if (!hasBuyer(transactions, LOSS)) {
+      newTransaction({
+        data: {
+          buyer: LOSS,
+        },
+        getKey: () => LOSS,
+      });
+    }
+
+    if (category.isAgent) {
+      for (const buyer of AGENT_INIT_LIST) {
+        if (hasBuyer(transactions, buyer)) continue;
+        newTransaction({
+          data: {
+            buyer: buyer,
+          },
+          getKey: () => buyer,
+        });
+      }
+    }
     setIsInit(true);
-  }, [
-    category,
-    date,
-    isLoading,
-    transactions,
-    newTransaction,
-    emptyTransactionDetail,
-    isInit,
-  ]);
+  }, [isLoading, transactions, newTransaction, isInit, category]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -88,6 +113,9 @@ export function OrderMain(props: OrderMainProps) {
   const toDisplay = useToDisplay(itemMap, DISPLAY_HEADER);
   const cellReplace = (value: string) => {
     if (value == LOSS) return '損耗';
+    else if (value == WORKER) return '工錢';
+    else if (value == COMMISSION) return '佣金';
+    else if (value == TRANSPORT) return '運費';
     else return value;
   };
   const columnOrder = useColumnOrder(items);

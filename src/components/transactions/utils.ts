@@ -145,19 +145,22 @@ export function useNewTransaction(
   const dispatch = useTxDispatch();
   const emptyTransactionDetail = useEmptyTransactionDetail(items);
   return useCallback(
-    (data?: Partial<Transaction>) => {
+    (props?: { data?: Partial<Transaction>; getKey?: () => string }) => {
       if (!transactionDate) return;
       let transaction: Transaction = {
         ...emptyTransaction,
         transactionDate: transactionDate.toDate(),
         TransactionDetail: [],
-        ...data,
+        ...props?.data,
       };
 
       transaction.TransactionDetail = emptyTransactionDetail();
-
       dispatch(
-        createTransaction({ category: category, transaction: transaction })
+        createTransaction({
+          category: category,
+          transaction: transaction,
+          key: props?.getKey ? props?.getKey() : undefined,
+        })
       );
     },
     [

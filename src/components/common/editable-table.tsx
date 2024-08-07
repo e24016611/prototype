@@ -98,7 +98,7 @@ const DataCell: (context: CellContext<any, any>) => React.ReactNode = ({
   }
 
   return (
-    <div ref={cellRef} style={{ width: '100%' }}>
+    <div ref={cellRef} style={{ width: '100%', fontSize: 'x-large' }}>
       {isEditMode ? (
         <input
           style={{ width: inputWidth }}
@@ -259,14 +259,14 @@ export default function EditableTable(props: EditableTableProps) {
   });
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+    <Paper sx={{ width: '100%', overflow: 'hidden', fontSize: 'x-large' }}>
       <TableContainer>
         <Table stickyHeader>
           <TableHead>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableCell key={header.id}>
+                  <TableCell key={header.id} sx={{ fontSize: 'x-large' }}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(

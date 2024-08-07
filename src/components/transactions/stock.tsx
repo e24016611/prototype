@@ -1,8 +1,9 @@
 import { SELF, STOCK } from '@/utils/constants';
-import { Transaction, TransactionKeys } from '@/utils/type';
+import { Category, Item, Transaction, TransactionKeys } from '@/utils/type';
 import { Box } from '@mui/material';
+
 import { Row } from '@tanstack/react-table';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import EditableTable from '../common/editable-table';
 import { OrderMain } from './orders';
@@ -41,6 +42,59 @@ const EMPTY_STOCK: Transaction = {
   ...EMPTY_TRANSACTION,
   buyer: SELF,
 };
+
+function useCollapseOrder(
+  transactions: Transaction[],
+  items: Item[],
+  category: Category,
+  date: Dayjs | null
+) {
+  const newTransaction = useNewTransaction(
+    items,
+    EMPTY_STOCK,
+    category.id.toString(),
+    date
+  );
+
+  return useCallback(
+    (rowId: string) => {
+      const txId = Number.parseInt(rowId);
+      const parentTransaction = transactions.find((tx) => tx.id == txId);
+      if (!parentTransaction) return '';
+      const childTransactions = parentTransaction.childTransactions;
+      const newChildTransaction = (props?: {
+        data?: Partial<Transaction>;
+        getKey?: () => string;
+      }) => {
+        const getKey = props?.getKey;
+        newTransaction({
+          data: {
+            parentTransactionId: txId,
+            seller: SELF,
+            buyer: '',
+            ...props?.data,
+          },
+          getKey: getKey ? () => `${txId}-${getKey()}` : undefined,
+        });
+      };
+      const sourceAndOrders = [...childTransactions, parentTransaction];
+      const isLoading = false;
+      return (
+        date && (
+          <OrderMain
+            transactions={sourceAndOrders}
+            isLoading={isLoading}
+            category={category}
+            date={date}
+            items={items}
+            newTransaction={newChildTransaction}
+          ></OrderMain>
+        )
+      );
+    },
+    [transactions, items, category, date, newTransaction]
+  );
+}
 
 export default function Stock() {
   const { isLoading, items, transactions, category, date } =
@@ -133,35 +187,7 @@ export default function Stock() {
     category.id.toString()
   );
 
-  const collapseTable = useCallback(
-    (rowId: string) => {
-      const txId = Number.parseInt(rowId);
-      const parentTransaction = transactions.find((tx) => tx.id == txId);
-      if (!parentTransaction) return '';
-      const childTransactions = parentTransaction.childTransactions;
-      const newChildTransaction = (data?: Partial<Transaction>) => {
-        newTransaction({
-          parentTransactionId: txId,
-          seller: SELF,
-          buyer: '',
-          ...data,
-        });
-      };
-      return (
-        date && (
-          <OrderMain
-            transactions={[...childTransactions, parentTransaction]}
-            isLoading={false}
-            category={category}
-            date={date}
-            items={items}
-            newTransaction={newChildTransaction}
-          ></OrderMain>
-        )
-      );
-    },
-    [transactions, items, category, date, newTransaction]
-  );
+  const collapseTable = useCollapseOrder(transactions, items, category, date);
 
   return (
     <Box>

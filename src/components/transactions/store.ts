@@ -17,12 +17,14 @@ const HEADERS = {
 type TransactionState = {
   transactions: Transaction[];
   isLoading: boolean;
+  createState: { [key: string]: boolean };
   error: string[];
 };
 
 const initialState: TransactionState = {
   transactions: [],
   isLoading: true,
+  createState: {},
   error: [],
 };
 
@@ -49,7 +51,7 @@ export const fetchTransactions = createAsyncThunk<
 
 export const createTransaction = createAsyncThunk<
   Transaction,
-  { category: string; transaction: Transaction }
+  { category: string; transaction: Transaction; key?: string }
 >(
   'transactions/createTransaction',
   async ({ transaction, category }, { rejectWithValue }) => {
@@ -67,6 +69,12 @@ export const createTransaction = createAsyncThunk<
     } catch (error) {
       return rejectWithValue(error);
     }
+  },
+  {
+    condition: ({ key }, { getState }) => {
+      const state = getState() as RootState;
+      return !key || !state.transaction.createState[key];
+    },
   }
 );
 
@@ -197,6 +205,10 @@ export const transactionSlice = createSlice({
       .addCase(fetchTransactions.fulfilled, (state, action) => {
         state.transactions = action.payload;
         state.isLoading = false;
+      })
+      .addCase(createTransaction.pending, (state, action) => {
+        if (!action.meta.arg.key) return;
+        state.createState[action.meta.arg.key] = true;
       })
       .addCase(createTransaction.fulfilled, (state, action) => {
         state.transactions.push(action.payload);
